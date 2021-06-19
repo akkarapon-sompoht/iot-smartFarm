@@ -12,148 +12,225 @@ class WelcomePage extends StatefulWidget {
 
 class _WelcomePageState extends State<WelcomePage> {
   final FirebaseDatabase database = FirebaseDatabase.instance;
-  // var DatabaseReference _referenceIsOpen = database.reference().child('FirebaseIot/isOpen');
+  DatabaseReference _referenceHumidity;
+  DatabaseReference _referenceIsOpen;
+  DatabaseReference _referenceMode;
+
   // var DatabaseReference _referenceMode = database.reference().child('FirebaseIot/mode');
-  bool _isOpen = true;
+  bool _isOpen = false;
+  bool _isMode = true;
+
   @override
-  void initState() { 
+  void initState() {
     super.initState();
-    // database.child('FirebaseIot/mode').get()
+    _referenceHumidity = database.reference().child('FirebaseIot/humidity');
+    _referenceIsOpen = database.reference().child('FirebaseIot/isOpen');
+    _referenceMode = database.reference().child('FirebaseIot/mode');
+    _referenceMode.once().then((snapshot) {
+      setState(() {
+        _isMode = snapshot.value;
+      });
+    });
+    _referenceIsOpen.once().then((snapshot) {
+      setState(() {
+        _isOpen = snapshot.value;
+      });
+    });
   }
-   
 
   pump(bool value) {
-    database
-        .reference()
-        .child('/test')
+    setState(() {
+      _isOpen = value;
+    });
+    _referenceIsOpen
         .set(value)
-        .then((value) => print('ok'))
-        .catchError((error) => print(error));
+        .then((value) => print("update is open success"));
   }
 
-  void onChangedCheckbox() {
+  void onChangedCheckbox(bool value) {
     setState(() {
-      _isOpen = !_isOpen;
+      _isMode = !_isMode;
     });
+    _referenceMode.set(_isMode).then((value) => print("update mode success"));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[100],
-      body: new Center(
-        child: Column(
-          children: <Widget>[
-            Container(
-              margin: EdgeInsets.fromLTRB(10, 10, 10, 10),
-              padding: new EdgeInsets.only(top: 100.0),
-              child: Text(
-                "Automatic Water System",
-                style: GoogleFonts.arimo(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-            SizedBox(height: 20.0),
-            SfRadialGauge(
-              axes: <RadialAxis>[
-                RadialAxis(
-                    minimum: 0,
-                    maximum: 1000,
-                    interval: 50,
-                    ranges: <GaugeRange>[
-                      GaugeRange(
-                          startValue: 0,
-                          endValue: 250,
-                          color: Colors.yellow[500]),
-                      GaugeRange(
-                          startValue: 250, endValue: 500, color: Colors.green),
-                      GaugeRange(
-                          startValue: 500,
-                          endValue: 750,
-                          color: Colors.blue[700]),
-                      GaugeRange(
-                          startValue: 750,
-                          endValue: 1000,
-                          color: Colors.purple),
+        backgroundColor: Colors.transparent,
+        body: SingleChildScrollView(
+          child: StreamBuilder<Event>(
+            stream: _referenceHumidity.onValue,
+            builder: (_, snapshot) {
+              if (!snapshot.hasData) {
+                return SizedBox();
+              } else {
+                int data = snapshot.data.snapshot.value as int;
+                return new Center(
+                  child: Column(
+                    children: <Widget>[
+                      Container(
+                        padding: new EdgeInsets.only(top: 80.0),
+                        child: Text(
+                          "ระบบรดน้ำอัตโนมัติ",
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.prompt(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.greenAccent,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 0.0,
+                      ),
+                      Container(
+                        child: Text(
+                          _isOpen ? 'หยุดทำงานแล้ว..' : 'กำลังทำงานอยู่!',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.prompt(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w300,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 0),
+                      SfRadialGauge(
+                        axes: <RadialAxis>[
+                          RadialAxis(
+                              minimum: 0,
+                              maximum: 1000,
+                              interval: 50,
+                              ranges: <GaugeRange>[
+                                GaugeRange(
+                                    startValue: 0,
+                                    endValue: 250,
+                                    color: Colors.yellow[500]),
+                                GaugeRange(
+                                    startValue: 250,
+                                    endValue: 500,
+                                    color: Colors.green),
+                                GaugeRange(
+                                    startValue: 500,
+                                    endValue: 750,
+                                    color: Colors.blue[700]),
+                                GaugeRange(
+                                    startValue: 750,
+                                    endValue: 1000,
+                                    color: Colors.purple),
+                              ],
+                              pointers: <GaugePointer>[
+                                NeedlePointer(
+                                    value: data.toDouble(),
+                                    enableAnimation: true,
+                                    animationType: AnimationType.easeOutBack)
+                              ],
+                              annotations: <GaugeAnnotation>[
+                                GaugeAnnotation(
+                                    widget: Text("$data",
+                                        style: TextStyle(
+                                            color: Colors.blueAccent,
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.bold)),
+                                    positionFactor: 0.700,
+                                    angle: 90)
+                              ])
+                        ],
+                      ),
+                      SizedBox(
+                        height: 10.0,
+                      ),
+                      Text(
+                        "Mode",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.archivo(
+                          fontSize: 28,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Checkbox(
+                            value: _isMode,
+                            onChanged: (bool value) {
+                              onChangedCheckbox(value);
+                            },
+                          ),
+                          Text(
+                            'manual',
+                            style: GoogleFonts.archivo(
+                              fontSize: 18,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Checkbox(
+                            value: !_isMode,
+                            onChanged: (bool value) {
+                              onChangedCheckbox(value);
+                            },
+                          ),
+                          Text(
+                            'auto',
+                            style: GoogleFonts.archivo(
+                              fontSize: 18,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10.0),
+                      if (_isMode)
+                        Column(
+                          children: [
+                            MaterialButton(
+                              height: 60,
+                              minWidth: 150,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: new BorderRadius.circular(12)),
+                              onPressed: () => pump(false),
+                              child: Text(
+                                "Pump on",
+                                style: GoogleFonts.roboto(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              color: Colors.green[600],
+                            ),
+                            SizedBox(height: 10.0),
+                            MaterialButton(
+                              height: 60,
+                              minWidth: 150,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: new BorderRadius.circular(12)),
+                              onPressed: () => pump(true),
+                              child: Text(
+                                "Pump off",
+                                style: GoogleFonts.roboto(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              color: Colors.redAccent[700],
+                            ),
+                          ],
+                        ),
                     ],
-                    pointers: <GaugePointer>[
-                      NeedlePointer(value: 700, enableAnimation: true)
-                    ],
-                    annotations: <GaugeAnnotation>[
-                      GaugeAnnotation(
-                          widget: Text("700.0",
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold)),
-                          positionFactor: 0.5,
-                          angle: 90)
-                    ])
-              ],
-            ),
-            Text("Mode"),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Checkbox(
-                  value: _isOpen,
-                  onChanged: (bool value) {
-                    onChangedCheckbox();
-                  },
-                ),
-                Text('manual'),
-                Checkbox(
-                  value: !_isOpen,
-                  onChanged: (bool value) {
-                    onChangedCheckbox();
-                  },
-                ),
-                Text('auto'),
-              ],
-            ),
-            SizedBox(height: 10.0),
-            if (_isOpen) 
-            Column(
-              children: [MaterialButton(
-              height: 60,
-              minWidth: 150,
-              shape: RoundedRectangleBorder(
-                  borderRadius: new BorderRadius.circular(12)),
-              onPressed: () => pump(true),
-              child: Text(
-                "Pump on",
-                style: GoogleFonts.roboto(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              color: Colors.green,
-            ),
-            SizedBox(height: 10.0),
-            MaterialButton(
-              height: 60,
-              minWidth: 150,
-              shape: RoundedRectangleBorder(
-                  borderRadius: new BorderRadius.circular(12)),
-              onPressed: () => pump(false),
-              child: Text(
-                "Pump off",
-                style: GoogleFonts.roboto(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              color: Colors.red,
-            ),
-            ],
-            ),
-          ],
-        ),
-      ),
-    );
+                  ),
+                );
+              }
+            },
+          ),
+        ));
   }
 }

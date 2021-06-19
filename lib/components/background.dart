@@ -7,20 +7,20 @@ class Background extends StatelessWidget {
     @required this.child,
   }) : super(key: key);
 
-  @override
+@override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      child: Stack(
-        alignment: Alignment.center,
-        children: <Widget>[
-          Positioned(
-            child: Image.asset(
-              "assets/images/01.jpg",
-            ),
+    return Stack(
+      children: <Widget> [
+        Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+            image: AssetImage('assets/images/wpp.jpg'),
+            fit: BoxFit.cover,
           ),
-        ],
+        ),
       ),
+      child,
+      ],
     );
   }
 }

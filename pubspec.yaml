@@ -33,11 +33,15 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.0
   google_fonts: ^0.4.3
+  flutter_launcher_icons: "^0.8.0"
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+flutter_icons:
+  android: true
+  image_path: "assets/images/mylogo.png"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -53,6 +57,10 @@ flutter:
   assets:
     - assets/images/
     - assets/images/01.jpg
+    - assets/images/good.jpg
+    - assets/images/wpp.jpg
+    - assets/images/002.jpg
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
