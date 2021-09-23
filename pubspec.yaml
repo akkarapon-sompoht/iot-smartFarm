@@ -26,6 +26,7 @@ dependencies:
   syncfusion_flutter_gauges: ^1.0.0-beta
   firebase_core: "^0.7.0"
   firebase_database: "^6.0.0"
+  numberpicker: ^2.1.1
 
 
 
@@ -60,6 +61,7 @@ flutter:
     - assets/images/good.jpg
     - assets/images/wpp.jpg
     - assets/images/002.jpg
+    - assets/images/tree.jpg
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
